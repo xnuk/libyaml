@@ -1,0 +1,13 @@
+[package]
+name = "libyaml"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# if_chain = "1.0.2"
+
+[build-dependencies.bindgen]
+version = "0.59.2"
+default-features = false
+features = ["runtime"]
+optional = true
