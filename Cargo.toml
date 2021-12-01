@@ -6,4 +6,5 @@ license = "AGPL-3.0-or-later"
 include = ["Cargo.*", "build.rs", "src/"]
 
 [dependencies]
+anyhow = "1.0.51"
 yaml-rust = "0.4.5"
