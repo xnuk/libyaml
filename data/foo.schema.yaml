@@ -1,0 +1,25 @@
+# vim: set sw=2
+
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://xnu.kr/suntofu/0.1.0-beta
+
+type: object
+properties: 0.10
+sex: &a
+- is: "go\0od\0"
+- jaji
+- bal: gi
+
+jjaji:
+  <<: *a
+  s: qw
+
+
+? - sex
+  - is
+:
+  - good
+
+jj:
+  ? a
+  ? b

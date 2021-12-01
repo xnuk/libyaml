@@ -1,0 +1,9 @@
+[package]
+name = "yam"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+include = ["Cargo.*", "build.rs", "src/"]
+
+[dependencies]
+yaml-rust = "0.4.5"
