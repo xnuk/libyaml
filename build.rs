@@ -2,7 +2,7 @@
 use bindgen::{builder, CargoCallbacks, EnumVariation};
 
 #[cfg(feature = "bindgen")]
-const REG: &'static str = "(?i).*yaml_(event|parser).*";
+const REG: &'static str = "yaml_(event|parser|char)_.*";
 
 fn main() {
 	println!("cargo:rustc-link-lib=yaml");

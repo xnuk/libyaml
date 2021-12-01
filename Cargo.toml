@@ -2,8 +2,12 @@
 name = "libyaml"
 version = "0.1.0"
 edition = "2021"
+license = "AGPL-3.0-or-later"
+include = ["Cargo.*", "build.rs", "src/"]
+links = "yaml"
 
 [dependencies]
+# anyhow = "1.0.51"
 # if_chain = "1.0.2"
 
 [build-dependencies.bindgen]
