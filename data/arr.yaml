@@ -1,4 +1,6 @@
+&a
 a: true
 b: yes
 c:
 d: ~
+e: *a
