@@ -1,8 +1,6 @@
 use yaml_rust::parser::{Event, EventReceiver, Parser};
 
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader};
-use yam::argf::argf;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 struct Anchor(usize);
@@ -41,7 +39,7 @@ impl EditingStruct {
 }
 
 #[derive(Debug, Default)]
-struct Editing {
+pub struct Editing {
 	anchors: HashMap<Anchor, Struct>,
 	anchor_stack: Vec<Anchor>,
 	editing_struct: Vec<(Anchor, EditingStruct)>,
@@ -134,16 +132,8 @@ impl EventReceiver for Editing {
 	}
 }
 
-fn main() -> anyhow::Result<()> {
-	let bufreader = BufReader::new(argf()?).lines().flat_map(|line| {
-		line.unwrap_or_default()
-			.chars()
-			.chain(['\n'])
-			.collect::<Vec<_>>()
-	});
+pub fn parse<T: Iterator<Item = char>>(buf: T) -> anyhow::Result<Editing> {
 	let mut st = Editing::default();
-	let parser = Parser::new(bufreader).load(&mut st, false)?;
-	println!("{:?}", st);
-
-	Ok(())
+	Parser::new(buf).load(&mut st, false)?;
+	Ok(st)
 }
