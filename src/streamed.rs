@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 use yaml_rust::parser::{Event, EventReceiver, Parser};
@@ -23,7 +23,7 @@ struct StringHole<'a> {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct Hole(Vec<Result<String, Anchor>>);
+pub struct Hole(VecDeque<Result<String, Anchor>>);
 
 impl<'a> StringHole<'a> {
 	fn singleton(a: TemplateItem<'a>) -> StringHole<'a> {
@@ -74,7 +74,7 @@ impl<'a> StringHole<'a> {
 	}
 
 	fn fold(&self) -> Hole {
-		let mut res = vec![];
+		let mut res = VecDeque::new();
 		let mut st = String::new();
 
 		for item in &self.data {
@@ -86,15 +86,15 @@ impl<'a> StringHole<'a> {
 					st.push_str(s);
 				}
 				TemplateItem::Ref(r) => {
-					res.push(Ok(st));
-					res.push(Err(*r));
+					res.push_back(Ok(st));
+					res.push_back(Err(*r));
 					st = String::new();
 				}
 			}
 		}
 
 		if !st.is_empty() {
-			res.push(Ok(st));
+			res.push_back(Ok(st));
 		}
 
 		Hole(res)
@@ -121,7 +121,7 @@ impl<'a> StackItem<'a> {
 }
 
 #[derive(Debug)]
-enum EditingError {
+pub enum EditingError {
 	Syntax,
 	RecursiveRef,
 }
@@ -146,7 +146,7 @@ struct Editing<'a> {
 	finished: Option<Result<Anchor, EditingError>>,
 }
 
-impl<'a> Editing<'a> {
+impl Editing<'_> {
 	fn fold_up(&mut self) -> Option<()> {
 		if let Some(mut a) = self.anchor_stack.pop() {
 			self.anchors.insert(a.anchor, a.template.clone());
@@ -162,12 +162,43 @@ impl<'a> Editing<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Folded {
+struct Folded {
 	anchors: HashMap<Anchor, Hole>,
 	starts: Anchor,
 }
 
-impl<'a> TryFrom<Editing<'a>> for Folded {
+impl Folded {
+	fn iter(self) -> Option<FoldedIter> {
+		let anchors = self.anchors;
+		Some(FoldedIter {
+			queue: anchors.get(&self.starts)?.clone(),
+			anchors,
+		})
+	}
+}
+
+pub struct FoldedIter {
+	anchors: HashMap<Anchor, Hole>,
+	queue: Hole,
+}
+
+impl Iterator for FoldedIter {
+	type Item = String;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		match self.queue.0.pop_front().as_ref()? {
+			Ok(s) => Some(s.clone()),
+			Err(anchor) => {
+				let mut hole = self.anchors.get(anchor)?.clone();
+				hole.0.append(&mut self.queue.0);
+				self.queue = hole;
+				self.next()
+			}
+		}
+	}
+}
+
+impl TryFrom<Editing<'_>> for Folded {
 	type Error = EditingError;
 
 	fn try_from(editing: Editing) -> Result<Self, Self::Error> {
@@ -186,7 +217,7 @@ impl<'a> TryFrom<Editing<'a>> for Folded {
 	}
 }
 
-impl<'a> TryFrom<&Event> for TemplateItem<'a> {
+impl TryFrom<&Event> for TemplateItem<'_> {
 	type Error = ();
 
 	fn try_from(event: &Event) -> Result<Self, Self::Error> {
@@ -226,7 +257,7 @@ impl TryFrom<&Event> for StructBoundary {
 	}
 }
 
-impl<'a> TryFrom<&Event> for Anchor {
+impl TryFrom<&Event> for Anchor {
 	type Error = ();
 
 	fn try_from(event: &Event) -> Result<Self, Self::Error> {
@@ -241,7 +272,7 @@ impl<'a> TryFrom<&Event> for Anchor {
 	}
 }
 
-impl<'a> EventReceiver for Editing<'a> {
+impl EventReceiver for Editing<'_> {
 	fn on_event(&mut self, ev: Event) {
 		use self::Event::*;
 
@@ -285,12 +316,11 @@ impl<'a> EventReceiver for Editing<'a> {
 	}
 }
 
-pub fn parse<T: Iterator<Item = char>>(buf: T) -> anyhow::Result<()> {
+pub fn parse<T: Iterator<Item = char>>(buf: T) -> anyhow::Result<FoldedIter> {
 	let mut st = Editing::default();
 	Parser::new(buf).load(&mut st, false)?;
-	let st = Folded::try_from(st)?;
-	println!("{:?}", st);
-	Ok(())
+	let st = Folded::try_from(st)?.iter().ok_or(EditingError::Syntax)?;
+	Ok(st)
 }
 
 #[cfg(test)]
