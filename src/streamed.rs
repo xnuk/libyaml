@@ -268,7 +268,7 @@ impl<'a> EventReceiver for Editing<'a> {
 			}
 
 			if let TemplateItem::Ref(r) = item {
-				if self.anchor_stack.iter().find(|x| x.anchor == r).is_some() {
+				if self.anchor_stack.iter().any(|x| x.anchor == r) {
 					self.finished = Some(Err(EditingError::RecursiveRef));
 					return;
 				}
@@ -283,7 +283,6 @@ impl<'a> EventReceiver for Editing<'a> {
 					self.fold_up();
 				}
 			} else {
-				return;
 			}
 		}
 	}

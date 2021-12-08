@@ -18,7 +18,7 @@ fn escape_char<'a>(c: char) -> Option<String> {
 	})
 }
 
-pub fn quote(s: &String) -> String {
+pub fn quote(s: &str) -> String {
 	let mut ss = s
 		.chars()
 		.flat_map(|c| match escape_char(c) {
