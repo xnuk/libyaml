@@ -202,7 +202,7 @@ impl<'a> TryFrom<&Event> for TemplateItem<'a> {
 			MappingStart(_) => Char('{'),
 			MappingEnd => Char('}'),
 			Scalar(string, _, _, _) => String(Cow::from(json::quote(string))),
-			_ => Err(())?,
+			_ => return Err(()),
 		})
 	}
 }
@@ -223,7 +223,7 @@ impl TryFrom<&Event> for StructBoundary {
 		Ok(match event {
 			SequenceStart(_) | MappingStart(_) => Start,
 			SequenceEnd | MappingEnd => End,
-			_ => Err(())?,
+			_ => return Err(()),
 		})
 	}
 }
@@ -234,11 +234,11 @@ impl<'a> TryFrom<&Event> for Anchor {
 	fn try_from(event: &Event) -> Result<Self, Self::Error> {
 		use self::Event::*;
 
-		Ok(match event {
+		(match event {
 			SequenceStart(x) | MappingStart(x) | Scalar(_, _, x, _) => {
-				Anchor(*x)
+				Ok(Anchor(*x))
 			}
-			_ => Err(())?,
+			_ => Err(()),
 		})
 	}
 }
@@ -282,7 +282,6 @@ impl<'a> EventReceiver for Editing<'a> {
 				if matches!(ev, SequenceEnd | MappingEnd) {
 					self.fold_up();
 				}
-			} else {
 			}
 		}
 	}

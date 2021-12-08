@@ -1,4 +1,4 @@
-fn escape_char<'a>(c: char) -> Option<String> {
+fn escape_char(c: char) -> Option<String> {
 	Some(match c {
 		'\x08' => "\\b".to_owned(),
 		'\t' => "\\t".to_owned(),
