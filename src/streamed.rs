@@ -68,8 +68,6 @@ impl<'a> StringHole<'a> {
 	}
 
 	fn append(&mut self, item: &mut StringHole<'a>) {
-		use self::TemplateItem::*;
-
 		self.prepend_comma();
 		self.data.append(&mut item.data);
 		self.len += 1;
@@ -234,12 +232,12 @@ impl<'a> TryFrom<&Event> for Anchor {
 	fn try_from(event: &Event) -> Result<Self, Self::Error> {
 		use self::Event::*;
 
-		(match event {
+		match event {
 			SequenceStart(x) | MappingStart(x) | Scalar(_, _, x, _) => {
 				Ok(Anchor(*x))
 			}
 			_ => Err(()),
-		})
+		}
 	}
 }
 
