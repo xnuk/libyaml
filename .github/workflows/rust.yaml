@@ -1,9 +1,8 @@
 name: hi
 
 on:
-  push:
-    branches:
-    - yaml-rust
+- push
+- workflow_dispatch
 
 jobs:
   build:
