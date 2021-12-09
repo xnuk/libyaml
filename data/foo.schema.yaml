@@ -14,12 +14,6 @@ jjaji:
   <<: *a
   s: qw
 
-
-? - sex
-  - is
-:
-  - good
-
 jj:
-  ? a
-  ? b
+  a:
+  b: ~
